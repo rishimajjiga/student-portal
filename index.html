@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Student Portal | Home</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #74ebd5, #ACB6E5);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      color: #333;
+    }
+    .portal-container {
+      background: white;
+      padding: 2em;
+      border-radius: 10px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+      width: 350px;
+      text-align: center;
+    }
+
+    .typing-text {
+      font-size: 22px;
+      font-weight: bold;
+      color: #0077cc;
+      white-space: nowrap;
+      overflow: hidden;
+      border-right: 2px solid #0077cc;
+      animation: typing 3s steps(30, end), blink 0.6s step-end infinite;
+      margin-bottom: 15px;
+    }
+
+    @keyframes typing {
+      from { width: 0 }
+      to { width: 100% }
+    }
+
+    @keyframes blink {
+      0%, 100% { border-color: transparent }
+      50% { border-color: #0077cc }
+    }
+
+    .portal-container p {
+      font-size: 14px;
+      color: #555;
+      margin-bottom: 20px;
+    }
+
+    .portal-container button {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: none;
+      border-radius: 5px;
+      font-size: 15px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    .register-btn {
+      background: #0077cc;
+      color: white;
+    }
+
+    .register-btn:hover {
+      background: #005fa3;
+    }
+
+    .login-btn {
+      background: #28a745;
+      color: white;
+    }
+
+    .login-btn:hover {
+      background: #1e7e34;
+    }
+
+    .footer {
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+      font-size: 12px;
+      color: #555;
+      background: rgba(255,255,255,0.7);
+      padding: 4px 8px;
+      border-radius: 5px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    }
+
+    .badge {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      font-size: 14px;
+      background: #ffc107;
+      padding: 4px 10px;
+      border-radius: 8px;
+      animation: pulse 2s infinite;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.15);
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.05); opacity: 0.85; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="badge">🎓 Rishi’s Project</div>
+
+<div class="portal-container">
+  <div class="typing-text">Welcome to Student Portal</div>
+  <p>Get started with your Student Portal account</p>
+  <button class="register-btn" onclick="location.href='register.html'">📝 Register</button>
+  <button class="login-btn" onclick="location.href='login.html'">🔐 Login</button>
+</div>
+
+<div class="footer">Rishi's Project</div>
+
+</body>
+</html>
