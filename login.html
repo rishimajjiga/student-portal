@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Student Portal</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #74ebd5, #ACB6E5);
+      color: #333;
+    }
+    .hidden { display: none; }
+
+    .login-page {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      animation: fadeIn 1s ease-in-out;
+      flex-direction: column;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .login-container {
+      background: white;
+      padding: 2em;
+      border-radius: 10px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+      width: 350px;
+      text-align: center;
+    }
+
+    .login-container h1 {
+      margin-bottom: 10px;
+      color: #0077cc;
+      font-size: 24px;
+    }
+
+    .login-container p {
+      font-size: 14px;
+      color: #555;
+    }
+
+    .login-container input, .login-container select {
+      width: 100%;
+      margin: 10px 0;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    .login-container button {
+      width: 100%;
+      padding: 10px;
+      background: #0077cc;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    .login-container button:hover {
+      background: #005fa3;
+    }
+
+    .google-btn {
+      margin-top: 15px;
+      background: white;
+      color: #333;
+      border: 1px solid #ccc;
+      font-weight: 500;
+    }
+
+    .google-btn:hover {
+      background: #f1f1f1;
+    }
+
+    .register-link {
+      margin-top: 15px;
+      font-size: 13px;
+    }
+
+    .register-link a {
+      color: #0077cc;
+      text-decoration: none;
+    }
+
+    .register-link a:hover {
+      text-decoration: underline;
+    }
+
+    .footer {
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+      font-size: 12px;
+      color: #555;
+      background: rgba(255,255,255,0.7);
+      padding: 4px 8px;
+      border-radius: 5px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    }
+
+    .badge {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      font-size: 14px;
+      background: #ffc107;
+      padding: 4px 10px;
+      border-radius: 8px;
+      animation: pulse 2s infinite;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.15);
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.05); opacity: 0.85; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="badge">🎓 Rishi’s Project</div>
+
+<div id="loginPage" class="login-page">
+  <div class="login-container">
+    <h1>🎓 Student Portal</h1>
+    <p>Access your timetable, grades, and more</p>
+    <form onsubmit="login(event)">
+      <input type="email" id="email" placeholder="Email" required />
+      <input type="password" id="password" placeholder="Password" required />
+      <select id="role" required>
+        <option value="">Login as...</option>
+        <option value="student">Student</option>
+        <option value="admin">Admin</option>
+      </select>
+      <button type="submit">Login</button>
+    </form>
+    <button class="google-btn" onclick="googleLogin()">Sign in with Google</button>
+    <div class="register-link">Not a member? <a href="register.html">Register now</a></div>
+  </div>
+</div>
+
+<div class="footer">Rishi's Project</div>
+
+<script>
+  const supabaseUrl = "https://xpxfceuiikvwjeyrzdij.supabase.co"; // ✅ Your Supabase project URL
+  const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhweGZjZXVpaWt2d2pleXJ6ZGlqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyMTk0NTgsImV4cCI6MjA2NTc5NTQ1OH0.BUA4VH-vZDQOLToVmF0LlmE0hAvTopM10wOQfTx8uLs"; // ✅ Your public anon key
+  const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+  async function login(event) {
+    event.preventDefault();
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+    const role = document.getElementById("role").value;
+
+    if (!role || !email || !password) {
+      alert("Please fill all fields.");
+      return;
+    }
+
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
+
+    if (error) {
+      alert("Login Failed: " + error.message);
+    } else {
+      const name = email.split('@')[0];
+      localStorage.setItem("profileName", name);
+      localStorage.setItem("profileEmail", email);
+      localStorage.setItem("role", role);
+
+      // Redirect based on role
+      if (role === "student") {
+        window.location.href = "student.html";
+      } else if (role === "admin") {
+        window.location.href = "admin.html";
+      } else {
+        window.location.href = "index.html"; // Fallback
+      }
+    }
+  }
+
+  async function googleLogin() {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: window.location.origin + "/student.html"
+      }
+    });
+
+    if (error) {
+      alert("Google Login Failed: " + error.message);
+    }
+  }
+</script>
+
+</body>
+</html>
