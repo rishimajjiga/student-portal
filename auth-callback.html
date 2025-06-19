@@ -1,0 +1,28 @@
+<!-- auth-callback.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Auth Callback</title>
+</head>
+<body>
+  <h2>Logging you in...</h2>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const supabase = window.supabase.createClient(
+      "https://xpxfceuiikvwjeyrzdij.supabase.co",
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhweGZjZXVpaWt2d2pleXJ6ZGlqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyMTk0NTgsImV4cCI6MjA2NTc5NTQ1OH0.BUA4VH-vZDQOLToVmF0LlmE0hAvTopM10wOQfTx8uLs"
+    );
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        // Redirect to dashboard
+        window.location.href = "student.html"; // or admin.html based on role
+      } else {
+        alert("Login failed");
+        window.location.href = "register.html";
+      }
+    });
+  </script>
+</body>
+</html>
