@@ -2,34 +2,48 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Admin Dashboard</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: 'Segoe UI', sans-serif; background: #f8f9fa; color: #333; }
     .dashboard { display: flex; flex-direction: column; height: 100vh; }
-    .navbar { background-color: #1e1e2f; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 10; }
+    .navbar { background-color: #1e1e2f; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 10; flex-wrap: wrap; }
     .badge { position: fixed; top: 10px; right: 10px; font-size: 14px; background: #ffc107; padding: 4px 10px; border-radius: 8px; animation: pulse 2s infinite; box-shadow: 0 0 10px rgba(0,0,0,0.15); }
     @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.05); opacity: 0.8; } 100% { transform: scale(1); opacity: 1; } }
-    .main-area { display: flex; flex: 1; }
+
+    .main-area { display: flex; flex: 1; overflow: hidden; }
     .sidebar { width: 240px; background: #1e1e2f; color: #fff; display: flex; flex-direction: column; padding: 20px; }
     .sidebar h2 { margin-bottom: 30px; font-size: 20px; }
     .sidebar ul { list-style: none; padding: 0; }
     .sidebar li { padding: 12px 10px; border-radius: 6px; cursor: pointer; margin-bottom: 5px; }
     .sidebar li:hover, .sidebar li.active { background: #343a40; }
+
     .main-content { flex: 1; padding: 30px; overflow-y: auto; animation: fadeIn 0.6s ease-in-out; }
     .tab { display: none; }
     .tab.active { display: block; }
     .card { background: white; padding: 20px; margin-bottom: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.05); }
-    table { width: 100%; border-collapse: collapse; }
-    th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
+    table { width: 100%; border-collapse: collapse; overflow-x: auto; display: block; }
+    th, td { border: 1px solid #ccc; padding: 10px; text-align: left; white-space: nowrap; }
     th { background: #0077cc; color: white; }
     input, textarea, select { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; }
     button { padding: 8px 16px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
     button:hover { background: #0056b3; }
     .footer { text-align: center; padding: 10px; background: #e9ecef; }
     .notice-card { background: #fff; padding: 15px; margin-bottom: 15px; border-left: 4px solid #007bff; border-radius: 6px; box-shadow: 0 1px 6px rgba(0,0,0,0.05); }
+
+    @media (max-width: 768px) {
+      .main-area { flex-direction: column; }
+      .sidebar { width: 100%; flex-direction: row; overflow-x: auto; padding: 10px; }
+      .sidebar h2 { display: none; }
+      .sidebar ul { display: flex; flex-wrap: nowrap; }
+      .sidebar li { flex: 1; text-align: center; padding: 10px 5px; font-size: 14px; margin: 0 4px; }
+      .main-content { padding: 15px; }
+      .navbar { flex-direction: column; align-items: flex-start; gap: 10px; }
+      table { font-size: 14px; }
+      input, textarea, select, button { font-size: 14px; }
+    }
   </style>
 </head>
 <body onload="checkAdmin()">
@@ -48,6 +62,7 @@
           <li onclick="showTab('notices')">📢 Post Notices</li>
           <li onclick="showTab('viewNotices')">📄 View Notices</li>
           <li onclick="showTab('attendance')">🗒️ Upload Attendance</li>
+          <li onclick="showTab('attendanceView')">📊 View Attendance</li>
         </ul>
       </aside>
       <main class="main-content">
@@ -57,10 +72,10 @@
           <hr style="margin:20px 0;">
           <h3>Profile Picture</h3>
           <div>
-            <img id="profileImage" src="" alt="No image" width="120" style="border-radius:50%;border:2px solid #007bff;margin-bottom:10px;">
-          </div>
-          <input type="file" id="profilePicInput" />
-          <button onclick="uploadProfilePic()">Upload Picture</button>
+            <img id="profileImage" src="" alt="Profile" width="120" style="border-radius: 50%; border: 2px solid #007bff; margin-bottom: 10px;" />
+<input type="file" id="profilePicInput" />
+<button onclick="uploadProfilePic()">Upload Picture</button>
+
         </div>
 
         <div id="users" class="tab card">
@@ -93,6 +108,17 @@
           </select>
           <button onclick="submitAttendance()">Submit Attendance</button>
         </div>
+
+        <div id="attendanceView" class="tab card">
+          <h2>Attendance Records</h2>
+          <input type="date" id="filterDate" />
+          <button onclick="loadAttendance()">Filter</button>
+          <button onclick="exportAttendanceCSV()">📁 Export CSV</button>
+          <table id="attendanceTable">
+            <thead><tr><th>Name</th><th>Email</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
       </main>
     </div>
     <div class="footer">&copy; 2025 Rishi’s Admin Portal</div>
@@ -106,24 +132,29 @@
     let allUsers = [];
 
     async function checkAdmin() {
-      const { data: { user }, error: authErr } = await supabase.auth.getUser();
-      if (authErr || !user) return window.location.href = 'login.html';
+  const { data: { user }, error: authErr } = await supabase.auth.getUser();
+  if (authErr || !user) return window.location.href = 'login.html';
 
-      const { data, error: uErr } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', user.id)
-        .single();
+  const { data, error: uErr } = await supabase
+    .from('users')
+    .select('*')
+    .eq('id', user.id)
+    .single();
 
-      if (uErr || data.role !== 'admin') return window.location.href = 'login.html';
+  if (uErr || data.role !== 'admin') return window.location.href = 'login.html';
 
-      document.getElementById('adminName').textContent = data.name;
-      const imgUrl = localStorage.getItem('profileImageURL');
-      if (imgUrl) document.getElementById('profileImage').src = imgUrl;
+  document.getElementById('adminName').textContent = data.name;
 
-      await loadUsers();
-      await loadNotices();
-    }
+  // Load profile image from localStorage
+  const imgUrl = localStorage.getItem('profileImageURL');
+  if (imgUrl) {
+    document.getElementById('profileImage').src = imgUrl;
+  } else {
+    document.getElementById('profileImage').src = 'default.jpg'; // fallback
+  }
+}
+
+
 
     async function logout() {
       await supabase.auth.signOut();
@@ -213,24 +244,109 @@
       alert('Attendance submitted successfully!');
     }
 
-    async function uploadProfilePic() {
-      const file = document.getElementById('profilePicInput').files[0];
-      if (!file) return alert('Please select a file');
+    async function loadAttendance() {
+      const date = document.getElementById('filterDate').value;
+      let query = supabase.from('attendance').select('*');
+      if (date) query = query.eq('date', date);
+      const { data, error } = await query.order('date', { ascending: false });
 
-      const { data: { user } } = await supabase.auth.getUser();
-      const filePath = `profile-pics/${user.id}.jpg`;
+      const tbody = document.querySelector('#attendanceTable tbody');
+      if (error || !data) {
+        tbody.innerHTML = `<tr><td colspan="5">Error: ${error?.message || 'No data'}</td></tr>`;
+        return;
+      }
 
-      const { error: upErr } = await supabase.storage
-        .from('profile-pics')
-        .upload(filePath, file, { upsert: true });
+      if (data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5">No records found.</td></tr>';
+        return;
+      }
 
-      if (upErr) return alert('Upload failed: ' + upErr.message);
-
-      const { data } = supabase.storage.from('profile-pics').getPublicUrl(filePath);
-      document.getElementById('profileImage').src = data.publicUrl;
-      localStorage.setItem('profileImageURL', data.publicUrl);
-      alert('Upload successful!');
+      tbody.innerHTML = data.map(record => `
+        <tr>
+          <td>${record.name}</td>
+          <td>${record.email}</td>
+          <td>${record.date}</td>
+          <td>${record.status}</td>
+          <td>
+            <button onclick="editAttendance('${record.id}', '${record.uid}', '${record.date}', '${record.status}')">✏️</button>
+            <button onclick="deleteAttendance('${record.id}')">🗑️</button>
+          </td>
+        </tr>
+      `).join('');
     }
+
+    async function editAttendance(id, uid, date, currentStatus) {
+      const newStatus = prompt("Update status (present/absent):", currentStatus);
+      if (!newStatus || !['present', 'absent'].includes(newStatus)) return alert("Invalid status.");
+
+      const { error } = await supabase.from('attendance').update({ status: newStatus }).eq('id', id);
+      if (error) return alert('Update failed: ' + error.message);
+      alert('Attendance updated!');
+      loadAttendance();
+    }
+
+    async function deleteAttendance(id) {
+      if (!confirm("Delete this attendance record?")) return;
+
+      const { error } = await supabase.from('attendance').delete().eq('id', id);
+      if (error) return alert('Deletion failed: ' + error.message);
+      alert('Deleted successfully.');
+      loadAttendance();
+    }
+
+    function exportAttendanceCSV() {
+      const rows = Array.from(document.querySelectorAll("#attendanceTable tbody tr"));
+      if (rows.length === 0) return alert("No data to export.");
+
+      const csv = [
+        ["Name", "Email", "Date", "Status"],
+        ...rows.map(row => Array.from(row.querySelectorAll("td")).slice(0, 4).map(td => td.textContent))
+      ].map(r => r.join(",")).join("\n");
+
+      const blob = new Blob([csv], { type: "text/csv" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = "attendance.csv";
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    async function uploadProfilePic() {
+  const file = document.getElementById('profilePicInput').files[0];
+  if (!file) return alert('Please select a file');
+
+  const { data: authData, error: authError } = await supabase.auth.getUser();
+  if (authError || !authData?.user) return alert('Not authenticated');
+
+  const userId = authData.user.id;
+  const fileExt = file.name.split('.').pop();
+  const filePath = `profile-pics/${userId}.${fileExt}`;
+
+  // Upload to storage (upsert to replace if exists)
+  const { error: uploadError } = await supabase.storage
+    .from('profile-pics')
+    .upload(filePath, file, { upsert: true });
+
+  if (uploadError) return alert('Upload failed: ' + uploadError.message);
+
+  // Get public URL
+  const { data: publicData } = supabase
+    .storage
+    .from('profile-pics')
+    .getPublicUrl(filePath);
+
+  const publicUrl = publicData?.publicUrl;
+  if (!publicUrl) return alert('Failed to get public URL');
+
+  // Save URL to localStorage
+  localStorage.setItem('profileImageURL', publicUrl);
+
+  // Display image
+  document.getElementById('profileImage').src = publicUrl;
+  alert('Profile picture uploaded successfully!');
+}
+
   </script>
 </body>
 </html>
