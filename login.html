@@ -16,7 +16,6 @@
       color: #333;
     }
     .hidden { display: none; }
-
     .login-page {
       display: flex;
       justify-content: center;
@@ -25,12 +24,10 @@
       animation: fadeIn 1s ease-in-out;
       flex-direction: column;
     }
-
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(-20px); }
       to { opacity: 1; transform: translateY(0); }
     }
-
     .login-container {
       background: white;
       padding: 2em;
@@ -39,18 +36,15 @@
       width: 350px;
       text-align: center;
     }
-
     .login-container h1 {
       margin-bottom: 10px;
       color: #0077cc;
       font-size: 24px;
     }
-
     .login-container p {
       font-size: 14px;
       color: #555;
     }
-
     .login-container input, .login-container select {
       width: 100%;
       margin: 10px 0;
@@ -58,7 +52,6 @@
       border: 1px solid #ccc;
       border-radius: 5px;
     }
-
     .login-container button {
       width: 100%;
       padding: 10px;
@@ -69,11 +62,9 @@
       cursor: pointer;
       transition: background 0.3s ease;
     }
-
     .login-container button:hover {
       background: #005fa3;
     }
-
     .google-btn {
       margin-top: 15px;
       background: white;
@@ -81,25 +72,20 @@
       border: 1px solid #ccc;
       font-weight: 500;
     }
-
     .google-btn:hover {
       background: #f1f1f1;
     }
-
     .register-link {
       margin-top: 15px;
       font-size: 13px;
     }
-
     .register-link a {
       color: #0077cc;
       text-decoration: none;
     }
-
     .register-link a:hover {
       text-decoration: underline;
     }
-
     .footer {
       position: fixed;
       bottom: 10px;
@@ -111,7 +97,6 @@
       border-radius: 5px;
       box-shadow: 0 0 5px rgba(0,0,0,0.1);
     }
-
     .badge {
       position: fixed;
       top: 10px;
@@ -123,7 +108,6 @@
       animation: pulse 2s infinite;
       box-shadow: 0 0 10px rgba(0, 0, 0, 0.15);
     }
-
     @keyframes pulse {
       0% { transform: scale(1); opacity: 1; }
       50% { transform: scale(1.05); opacity: 0.85; }
@@ -157,9 +141,10 @@
 <div class="footer">Rishi's Project</div>
 
 <script>
-  const supabaseUrl = "https://xpxfceuiikvwjeyrzdij.supabase.co"; // ✅ Your Supabase project URL
-  const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhweGZjZXVpaWt2d2pleXJ6ZGlqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyMTk0NTgsImV4cCI6MjA2NTc5NTQ1OH0.BUA4VH-vZDQOLToVmF0LlmE0hAvTopM10wOQfTx8uLs"; // ✅ Your public anon key
-  const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+  const supabase = window.supabase.createClient(
+    "https://xpxfceuiikvwjeyrzdij.supabase.co",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhweGZjZXVpaWt2d2pleXJ6ZGlqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyMTk0NTgsImV4cCI6MjA2NTc5NTQ1OH0.BUA4VH-vZDQOLToVmF0LlmE0hAvTopM10wOQfTx8uLs"
+  );
 
   async function login(event) {
     event.preventDefault();
@@ -178,34 +163,47 @@
     });
 
     if (error) {
-      alert("Login Failed: " + error.message);
-    } else {
-      const name = email.split('@')[0];
-      localStorage.setItem("profileName", name);
-      localStorage.setItem("profileEmail", email);
-      localStorage.setItem("role", role);
+  alert("Login Failed: " + error.message);
+} else {
+  const name = email.split('@')[0];
+  localStorage.setItem("profileName", name);
+  localStorage.setItem("profileEmail", email);
+  localStorage.setItem("role", role);
 
-      // Redirect based on role
-      if (role === "student") {
-        window.location.href = "student.html";
-      } else if (role === "admin") {
-        window.location.href = "admin.html";
-      } else {
-        window.location.href = "index.html"; // Fallback
-      }
-    }
+  // ✅ Check if full profile exists
+  const profileKey = `${email}_profile`;
+  if (!localStorage.getItem(profileKey)) {
+    // Set default profile (just once)
+    const profile = {
+      name,
+      email,
+      year: "", // or fetch from DB if available
+      pic: ""
+    };
+    localStorage.setItem(profileKey, JSON.stringify(profile));
+  }
+
+  if (role === "student") {
+    window.location.href = "student.html";
+  } else if (role === "admin") {
+    window.location.href = "admin.html";
+  } else {
+    window.location.href = "index.html";
+  }
+}
+
   }
 
   async function googleLogin() {
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: window.location.origin + "/student.html"
+        redirectTo: window.location.origin + "/auth-callback.html"
       }
     });
 
     if (error) {
-      alert("Google Login Failed: " + error.message);
+      alert("Google Login Failed: " + error.message);eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
     }
   }
 </script>
