@@ -198,7 +198,9 @@
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: window.location.origin + "/student-portal/auth-callback.html"
+        redirectTo: "https://rishimajjiga.github.io/student-portal/auth-callback.html"
+
+
       }
     });
 
